@@ -9,24 +9,48 @@ import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
 import java.net.URL
 
-class FetchUserTask(mainActivity: MainActivity) : AsyncTask<String, Void, User?>() {
+class FetchUserTask(mainActivity: MainActivity) : AsyncTask<String, User, User?>() {
     private val activityRef: WeakReference<MainActivity> = WeakReference(mainActivity)
 
 
     override fun doInBackground(vararg p0: String): User? {
 
+        val mainActivity: MainActivity = activityRef.get() ?: return null
+        val dao = AppDatabase.getDbInstance(mainActivity).userDao()
+
         val userName = p0[0]
-        val userJson: String = fetchUserJson(userName)
-        var user: User? = null
+        var user: User? = dao.getUserByLogin(userName)
 
-        if (!userJson.isEmpty()){
+        if (!isCancelled){
+            if (user != null){
+                publishProgress(user)
+            }
 
-            val moshi = Moshi.Builder().build()
-            val jsonAdapter = moshi.adapter<User>(User::class.java)
-            user = jsonAdapter.fromJson(userJson)
+            val userJson: String = fetchUserJson(userName)
+            if (!userJson.isEmpty()){
+
+                val moshi = Moshi.Builder().build()
+                val jsonAdapter = moshi.adapter<User>(User::class.java)
+                user = jsonAdapter.fromJson(userJson)
+
+                if (user != null) {
+                    dao.insertUser(user)
+                }
+            }
         }
 
         return user
+    }
+
+    override fun onProgressUpdate(vararg values: User) {
+
+        super.onProgressUpdate(*values)
+
+        var user = values[0]
+
+        val mainActivity: MainActivity = activityRef.get() ?: return
+
+        mainActivity.displayUser(user, true)
     }
 
     override fun onPostExecute(user: User?) {

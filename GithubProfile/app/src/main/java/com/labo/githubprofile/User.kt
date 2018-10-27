@@ -1,10 +1,16 @@
 package com.labo.githubprofile
 
+import android.arch.persistence.room.ColumnInfo
+import android.arch.persistence.room.Entity
+import android.arch.persistence.room.PrimaryKey
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@Entity
+@JsonClass(generateAdapter = true)
 data class User(
     @Json(name = "login") var login: String? = "",
-    @Json(name = "id") var id: Int? = 0,
+    @PrimaryKey @Json(name = "id") var id: Int? = 0,
     @Json(name = "avatar_url") var avatarUrl: String? = "",
     @Json(name = "gravatar_id") var gravatarId: String? = "",
     @Json(name = "url") var url: String? = "",

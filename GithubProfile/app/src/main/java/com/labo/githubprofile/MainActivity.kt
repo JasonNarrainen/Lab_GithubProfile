@@ -1,8 +1,11 @@
 package com.labo.githubprofile
 
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.activity_main.*
@@ -11,13 +14,48 @@ class MainActivity : AppCompatActivity() {
 
     var fetchUserTask: FetchUserTask? = null
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
 
         // Calls the view for the search
         setUpSearchView()
+
+        val loginTextView: TextView = findViewById(R.id.tv_user_name)
+        val nameTextView: TextView = findViewById(R.id.tv_fullname)
+
+        if (savedInstanceState != null){
+            with(savedInstanceState){
+                loginTextView.text = getCharSequence(STATE_LOGIN)
+                nameTextView.text = getCharSequence(STATE_NAME)
+
+                System.out.println(loginTextView.text)
+                System.out.println(nameTextView.text)
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+
+        val loginTextView: TextView = findViewById(R.id.tv_user_name)
+        val nameTextView: TextView = findViewById(R.id.tv_fullname)
+
+        val loginText = loginTextView.text
+        val nameText = nameTextView.text
+
+        outState?.run {
+
+            putCharSequence(STATE_LOGIN, loginText)
+            putCharSequence(STATE_NAME, nameText)
+        }
+
+        super.onSaveInstanceState(outState)
+    }
+
+    companion object {
+        val STATE_LOGIN = "loginText"
+        val STATE_NAME = "nameText"
     }
 
     /***************************************************
@@ -79,8 +117,6 @@ class MainActivity : AppCompatActivity() {
         tv_fullname.text = user.name
 
         Glide.with(this).load(user.avatarUrl).into(iv_avatar)
-
-        System.out.println(user.avatarUrl)
 
         if (!loading)
             progress_bar_profile.visibility = View.GONE
