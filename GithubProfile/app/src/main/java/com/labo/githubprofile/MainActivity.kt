@@ -1,7 +1,9 @@
 package com.labo.githubprofile
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.ImageView
@@ -9,6 +11,8 @@ import android.widget.TextView
 import android.widget.Toast
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.ByteArrayOutputStream
+import java.lang.System.out
 
 class MainActivity : AppCompatActivity() {
 
@@ -22,40 +26,70 @@ class MainActivity : AppCompatActivity() {
         // Calls the view for the search
         setUpSearchView()
 
-        val loginTextView: TextView = findViewById(R.id.tv_user_name)
-        val nameTextView: TextView = findViewById(R.id.tv_fullname)
+        // Initialize the views from the xml file
+        val usernameTextView: TextView = findViewById(R.id.tv_user_name)
+        val fullNameTextView: TextView = findViewById(R.id.tv_fullname)
+        val avatarImageView: ImageView = findViewById((R.id.iv_avatar))
 
+        // If the bundle was created previously
         if (savedInstanceState != null){
             with(savedInstanceState){
-                loginTextView.text = getCharSequence(STATE_LOGIN)
-                nameTextView.text = getCharSequence(STATE_NAME)
 
-                System.out.println(loginTextView.text)
-                System.out.println(nameTextView.text)
+                // Get the text from the username and full name from the bundle using the keys
+                // and set the texts in the views.
+                usernameTextView.text = getCharSequence(STATE_USERNAME)
+                fullNameTextView.text = getCharSequence(STATE_FULLNAME)
+
+                val avatarBitmap = BitmapFactory.decodeByteArray(getByteArray(STATE_AVATAR), 0, getByteArray(
+                    STATE_AVATAR)!!.size)
+
+                // Get the bitmap from the bundle using the key and set the bitmap for the ImageView
+                avatarImageView.setImageBitmap(avatarBitmap)
             }
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
 
-        val loginTextView: TextView = findViewById(R.id.tv_user_name)
-        val nameTextView: TextView = findViewById(R.id.tv_fullname)
+        // Initialize the views from the xml file
+        val usernameTextView: TextView = findViewById(R.id.tv_user_name)
+        val fullNameTextView: TextView = findViewById(R.id.tv_fullname)
+        val avatarImageView: ImageView = findViewById((R.id.iv_avatar))
 
-        val loginText = loginTextView.text
-        val nameText = nameTextView.text
+        // Get the text from the views
+        val usernameText = usernameTextView.text
+        val fullNameText = fullNameTextView.text
 
-        outState?.run {
+        if (avatarImageView.drawable != null){
 
-            putCharSequence(STATE_LOGIN, loginText)
-            putCharSequence(STATE_NAME, nameText)
+            // Get the drawable from ImageView and cast it to BitmapDrawable to have access to the bitmap method
+            val avatarBitmap = (avatarImageView.drawable!! as BitmapDrawable).bitmap
+
+            var byteStream = ByteArrayOutputStream()
+            avatarBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteStream)
+
+            // Use the run method to put information in outstate to use with the onCreate method.
+            outState?.run {
+
+                // Put the text using key/value method
+                putCharSequence(STATE_USERNAME, usernameText)
+                putCharSequence(STATE_FULLNAME, fullNameText)
+
+                // Get the bitmap from the BitmapDrawable to be compatible with the putParcelable method
+                // and using key/value method.
+                putByteArray(STATE_AVATAR, byteStream.toByteArray())
+            }
         }
 
+        // Call the super to get the default saved information
         super.onSaveInstanceState(outState)
     }
 
+    // Declare object with the keys to restore the information
     companion object {
-        val STATE_LOGIN = "loginText"
-        val STATE_NAME = "nameText"
+        val STATE_USERNAME = "usernameText"
+        val STATE_FULLNAME = "fullNameText"
+        val STATE_AVATAR = "image"
     }
 
     /***************************************************
